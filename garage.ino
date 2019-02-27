@@ -45,7 +45,7 @@ int greenTh,redTh,yellowTh;   // Create threshold values
 int tempGreenTh,tempRedTh,tempYellowTh;   // Store the temporary threshold values
 int answer =0;
 char lastchar = ' ';
-char keyarray[200];
+char keyarray[4];
 int32_t keyarrayi=0;
 
 
@@ -257,9 +257,9 @@ void drawNumPad()
   tft.setTextColor(ILI9341_GREEN);
   tft.print("ENTER");
 
-  tft.setCursor(140,50);
-  tft.setTextColor(ILI9341_GREEN);
-  tft.print(answer);
+  //tft.setCursor(140,50);
+  //tft.setTextColor(ILI9341_GREEN);
+  //tft.print(answer);
   
 }
 
@@ -268,6 +268,32 @@ void addchar(char *array1, char inchar)
   int32_t input_str_len = strlen(array1);  //get current length of string
   array1[input_str_len]   = inchar;  //assign received character to the last position in the string
   array1[input_str_len + 1] = '\0';
+}
+
+int32_t chartoint(char num)
+{
+
+  return num - '0';
+}
+
+int32_t chararraytoint(char *a)
+{
+  int32_t len = strlen(a);
+  int32_t finalnum = 0;
+  int32_t intval = 0;
+  int32_t placeval = 1;
+
+  if (len > 0)
+  {
+    for (int i = len - 1; i >= 0; i--)
+    {
+      intval = chartoint(a[i]);
+      intval = intval * placeval;
+      finalnum = finalnum + intval;
+      placeval *= 10;
+    }
+  }
+  return finalnum;
 }
 
 void loop() {
@@ -316,7 +342,7 @@ void loop() {
   
     delay(200);
 
-    if (distance > greenTh){
+    if (distance > greenTh && greenTh > redTh && greenTh > yellowTh){
       tft.fillScreen(ILI9341_GREEN);
       tft.setCursor(80,110);
       tft.setTextSize(4);
@@ -333,7 +359,7 @@ void loop() {
         tft.print(distance);
         }
     }
-    else if (distance <= greenTh && distance >= redTh){
+    else if ((distance >= yellowTh || distance <=yellowTh) && distance <= greenTh && distance >= redTh){
       tft.fillScreen(ILI9341_YELLOW);
       tft.setCursor(15,110);
       tft.setTextSize(4);
@@ -344,7 +370,7 @@ void loop() {
       tft.setCursor(90,160);
       tft.print(distance);
       }
-    else{
+    else if (distance < redTh && distance < greenTh && distance < yellowTh){
       tft.fillScreen(ILI9341_RED);
       tft.setCursor(80,110);
       tft.setTextSize(4);
@@ -354,6 +380,14 @@ void loop() {
       tft.setTextSize(6);
       tft.setCursor(100,160);
       tft.print(distance);
+      }
+    else{
+      tft.fillScreen(ILI9341_BLACK);
+      tft.setCursor(60,130);
+      tft.setTextSize(4);
+      tft.setFont();
+      tft.setTextColor(ILI9341_RED);
+      tft.print("ERROR");
       }
  
     delay(20);
@@ -381,16 +415,22 @@ void loop() {
         answer = greenTh;
         drawNumPad();
         currentPage = SET_GREEN_PAGE;
+        tft.setCursor(100,50);
+        tft.setTextColor(ILI9341_GREEN);
         }
       if ((x>145&&x<220)&&(y>155&&y<187)){
         answer = yellowTh;
         drawNumPad();
         currentPage = SET_YELLOW_PAGE;
+        tft.setCursor(100,50);
+        tft.setTextColor(ILI9341_GREEN);
         }
       if ((x>145&&x<220)&&(y>235&&y<267)){
         answer = redTh;
         drawNumPad();
         currentPage = SET_RED_PAGE;
+        tft.setCursor(100,50);
+        tft.setTextColor(ILI9341_GREEN);
         }
       if ((x>70&&x<165)&&(y>285&&y<310)){
         // Further development : do a confirmation/ checking before return
@@ -417,15 +457,79 @@ void loop() {
   if (currentPage == SET_GREEN_PAGE || currentPage == SET_YELLOW_PAGE || currentPage == SET_RED_PAGE){
     
     if (touch.isTouching()) {
+      delay(200);
       touch.getPosition(x, y);
       Serial.print("x ="); Serial.print(x); Serial.print(" y ="); Serial.println(y);
       if ((x>90 && x<230) && (y>260 && y<310)) {
+        keyarray[0] = '\0';
+        switch(currentPage){
+          case SET_GREEN_PAGE :   greenTh = keyarrayi;
+                                  keyarrayi=0;
+                                  break;
+          case SET_YELLOW_PAGE:   yellowTh = keyarrayi;
+                                  keyarrayi=0;
+                                  break;
+          case SET_RED_PAGE:      redTh = keyarrayi;
+                                  keyarrayi=0;
+                                  break;
+          default: greenTh = greenTh;
+                   yellowTh = yellowTh;
+                   redTh = redTh;
+                   keyarrayi=0;
+          }
         currentPage = OPTION_PAGE;
         optionOperation();
         return;
       }
       if((x>20&&x<80)&&(y>80&&y<130)){
-        
+        addchar(keyarray,'7');
+        keyarrayi=chararraytoint(keyarray);
+        tft.print(7);
+        }
+      if((x>90&&x<150)&&(y>80&&y<130)){
+        addchar(keyarray,'8');
+        keyarrayi=chararraytoint(keyarray);
+        tft.print(8);
+        }
+      if((x>160&&x<210)&&(y>80&&y<130)){
+        addchar(keyarray,'9');
+        keyarrayi=chararraytoint(keyarray);
+        tft.print(9);
+        }
+      if((x>20&&x<80)&&(y>140&&y<190)){
+        addchar(keyarray,'4');
+        keyarrayi=chararraytoint(keyarray);
+        tft.print(4);
+        }
+      if((x>90&&x<150)&&(y>140&&y<190)){
+        addchar(keyarray,'5');
+        keyarrayi=chararraytoint(keyarray);
+        tft.print(5);
+        }
+      if((x>160&&x<210)&&(y>140&&y<190)){
+        addchar(keyarray,'6');
+        keyarrayi=chararraytoint(keyarray);
+        tft.print(6);
+        }
+      if((x>20&&x<80)&&(y>200&&y<250)){
+        addchar(keyarray,'1');
+        keyarrayi=chararraytoint(keyarray);
+        tft.print(1);
+        }
+      if((x>90&&x<150)&&(y>200&&y<250)){
+        addchar(keyarray,'2');
+        keyarrayi=chararraytoint(keyarray);
+        tft.print(2);
+        }
+      if((x>160&&x<210)&&(y>200&&y<250)){
+        addchar(keyarray,'3');
+        keyarrayi=chararraytoint(keyarray);
+        tft.print(3);
+        }
+      if((x>20&&x<80)&&(y>260&&y<310)){
+        addchar(keyarray,'0');
+        keyarrayi=chararraytoint(keyarray);
+        tft.print(0);
         }
       }
   }
